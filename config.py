@@ -1,0 +1,54 @@
+
+SERVER_ADDR = '127.0.0.1'  
+SERVER_PORTS = [5000, 5001, 5002, 5003]  
+N_CLIENTS = 4 
+
+
+
+SERVER_STAKES = {
+    5000: 50,  
+    5001: 30,  
+    5002: 15,  
+    5003: 5    
+}
+
+
+MODEL_CLASS_NAME = 'LstmNetwork'  
+MODEL_NAME = 'LSTM'  
+STEP_SIZE = 0.01  
+BATCH_SIZE = 64  
+NUM_ITERATIONS_WITH_SAME_MINIBATCH_FOR_TAU_EQUALS_ONE = 10  
+
+
+DATASET = 'UCI_HAR'  
+TOTAL_DATA = 1000  
+DATASET_FILE_PATH = 'data/hou_all.csv'  
+
+
+BUFFER_SIZE = 4096  
+ENCODING = 'utf-8'  
+TIMEOUT = 10  
+
+
+TAU_INITIAL = 1.0  
+TAU_MAX = 10  
+TAU_MIN = 0.1  
+TAU_STEP = 0.5  
+
+
+PEER_ADDRESSES = [
+    ('127.0.0.1', 5000),  
+    ('127.0.0.1', 5001),  
+    ('127.0.0.1', 5002),  
+    ('127.0.0.1', 5003)   
+]
+
+
+LOGGING_ENABLED = True  
+
+
+MAX_CONNECTION_RETRIES = 5  
+RETRY_DELAY = 5  
+
+
+RANDOM_SERVER_SELECTION = True  
