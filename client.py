@@ -27,6 +27,7 @@ CLIENT_ETH_ADDRESSES = {
     "client_001": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
     "client_002": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
     "client_003": "0x90F79bf6EB2c4f870365E785982E1f101E93b906"
+    # client_004 intentionally excluded (no Ethereum address)
 }
 
 VEHICLE_CLIENTS = ["client_001", "client_002", "client_003"]
@@ -63,9 +64,9 @@ def send_weight_update(sock, client_id, model_type, model_weights):
             'model_type': model_type,
             'weights': block
         }])
-        print(f"[SEND] {model_type} weights sent from {client_id}")
+        print(f"[SEND] {model_type.upper()} lightweight block sent from {client_id}")
     except Exception as e:
-        print(f"[ERROR] Sending {model_type} weights failed: {e}")
+        print(f"[ERROR] Sending {model_type.upper()} weights failed: {e}")
 
 def perform_firmware_update():
     print("[FIRMWARE] Simulating firmware update...")
@@ -84,14 +85,13 @@ def load_local_dataset(vehicle_id, csv_path="vanet_data.csv"):
 
 def preprocess_data(df):
     try:
+        # Using new columns: 'lat', 'lon', 'reputation_value' as features and 'defected' as target.
         df = df.dropna(subset=['lat', 'lon', 'reputation_value', 'defected'])
         features = df[['lat', 'lon', 'reputation_value']].values.astype(np.float32)
         targets = df['defected'].values.astype(np.float32)
-
         X_train, X_test, y_train, y_test = train_test_split(
             features, targets, test_size=0.2, random_state=42
         )
-
         return (
             torch.tensor(X_train), torch.tensor(y_train).unsqueeze(1),
             torch.tensor(X_test), torch.tensor(y_test).unsqueeze(1)
@@ -132,7 +132,6 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--client_id', required=True, choices=all_clients)
     args = parser.parse_args()
-
     client_id = args.client_id
     is_vehicle = client_id in VEHICLE_CLIENTS
     is_rsu = client_id in RSU_CLIENTS
@@ -198,15 +197,16 @@ def main():
                 if train_X is None:
                     continue
 
-                # --- Train LSTM ---
+                # --- Train LSTM Model ---
                 lstm_model = LSTM(input_dim=3, hidden_dim=100, output_dim=1)
+                # Load LSTM weights from payload (assuming server sends LSTM weights)
                 lstm_model.load_state_dict({k: torch.tensor(v) for k, v in payload['model'].items()})
                 lstm_weights = train_and_evaluate(lstm_model, "lstm", train_X, train_y, test_X, test_y)
                 send_weight_update(sock, client_id, "lstm", state_dict_to_json(lstm_weights))
 
-                # --- Train BiRNN ---
+                # --- Train BiRNN Model ---
                 birnn_model = BiRNN(input_dim=3, hidden_dim=100, output_dim=1)
-                birnn_model.load_state_dict({k: torch.tensor(v) for k, v in payload['model'].items()})
+                # Do NOT load weights from payload for BiRNN; train from scratch
                 birnn_weights = train_and_evaluate(birnn_model, "birnn", train_X, train_y, test_X, test_y)
                 send_weight_update(sock, client_id, "birnn", state_dict_to_json(birnn_weights))
 
